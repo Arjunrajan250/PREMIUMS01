@@ -14,7 +14,7 @@ import OrdersListModal from './components/OrdersListModal';
 import VaultShieldSection from './components/VaultShieldSection';
 import Footer from './components/Footer';
 
-import { SearchX } from 'lucide-react';
+import { SearchX, SlidersHorizontal } from 'lucide-react';
 import { INITIAL_LISTINGS, CURRENCIES } from './data/mockData';
 import './styles/marketplace.css';
 
@@ -63,6 +63,20 @@ export default function App() {
   const [activeOrder, setActiveOrder] = useState(null);
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [isEscrowInfoOpen, setIsEscrowInfoOpen] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isOrdersListOpen, setIsOrdersListOpen] = useState(false);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (regionFilter !== 'all') count++;
+    if (instantOnly) count++;
+    if (verifiedOnly) count++;
+    if (minPrice) count++;
+    if (maxPrice) count++;
+    if (sortBy !== 'featured') count++;
+    return count;
+  }, [regionFilter, instantOnly, verifiedOnly, minPrice, maxPrice, sortBy]);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [isOrdersListOpen, setIsOrdersListOpen] = useState(false);
 

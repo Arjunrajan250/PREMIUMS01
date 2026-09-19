@@ -1,5 +1,5 @@
 import React from 'react';
-import { SlidersHorizontal, RotateCcw, Zap, CheckCircle, ShieldCheck } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, Zap, CheckCircle, ShieldCheck, X } from 'lucide-react';
 import { CURRENCIES } from '../data/mockData';
 
 export default function FilterSidebar({
@@ -16,21 +16,30 @@ export default function FilterSidebar({
   sortBy,
   setSortBy,
   selectedCurrency,
-  onResetFilters
+  onResetFilters,
+  isOpenMobile,
+  onCloseMobile
 }) {
   const currencySymbol = CURRENCIES[selectedCurrency].symbol;
 
   return (
-    <aside className="filter-sidebar">
+    <aside className={`filter-sidebar ${isOpenMobile ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-title">
-          <SlidersHorizontal size={18} style={{ color: 'var(--violet-bright)' }} />
+          <SlidersHorizontal size={17} style={{ color: 'var(--violet-bright)' }} />
           <span>Filters & Sort</span>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={onResetFilters} title="Reset all filters">
-          <RotateCcw size={14} />
-          <span style={{ fontSize: '11px' }}>Reset</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button className="btn btn-ghost btn-sm" onClick={onResetFilters} title="Reset all filters">
+            <RotateCcw size={13} />
+            <span style={{ fontSize: '11px' }}>Reset</span>
+          </button>
+          {isOpenMobile && (
+            <button className="btn btn-outline btn-sm mobile-only" onClick={onCloseMobile} aria-label="Close filters">
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sort By */}
@@ -67,7 +76,7 @@ export default function FilterSidebar({
       <div className="filter-group">
         <div className="filter-toggle-row" onClick={() => setVerifiedOnly(!verifiedOnly)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle size={16} style={{ color: '#38bdf8' }} />
+            <CheckCircle size={16} style={{ color: '#0284C7' }} />
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Verified Sellers Only</span>
           </div>
           <div className={`toggle-switch ${verifiedOnly ? 'active' : ''}`}>
@@ -119,20 +128,29 @@ export default function FilterSidebar({
 
       {/* VaultShield Escrow Notice */}
       <div style={{
-        marginTop: '24px',
+        marginTop: '20px',
         padding: '14px',
         borderRadius: 'var(--radius-md)',
-        background: 'rgba(16, 185, 129, 0.08)',
-        border: '1px solid rgba(16, 185, 129, 0.2)'
+        background: '#ECFDF5',
+        border: '1px solid #A7F3D0'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--emerald-glow)', fontWeight: 700, fontSize: '12px', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--emerald-glow)', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>
           <ShieldCheck size={16} />
           <span>VAULTSHIELD ESCROW</span>
         </div>
-        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-          Every order is held in escrow until you inspect credentials and confirm working order.
+        <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+          Payment released to seller only after you verify login and working status.
         </p>
       </div>
+
+      {/* Mobile Apply Button */}
+      {isOpenMobile && (
+        <div style={{ marginTop: '20px' }}>
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={onCloseMobile}>
+            Apply Filters
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
