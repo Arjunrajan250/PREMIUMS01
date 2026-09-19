@@ -77,8 +77,6 @@ export default function App() {
     if (sortBy !== 'featured') count++;
     return count;
   }, [regionFilter, instantOnly, verifiedOnly, minPrice, maxPrice, sortBy]);
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [isOrdersListOpen, setIsOrdersListOpen] = useState(false);
 
   // Sync to local storage
   useEffect(() => {
@@ -263,6 +261,33 @@ export default function App() {
 
       {/* Marketplace Catalog & Filters Layout */}
       <main className="container" id="marketplace" style={{ marginTop: '24px' }}>
+        {/* Mobile Quick Filter Bar */}
+        <div className="mobile-filter-bar mobile-only">
+          <button
+            className="btn btn-outline"
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+            onClick={() => setIsMobileFilterOpen(true)}
+          >
+            <SlidersHorizontal size={16} style={{ color: 'var(--violet-bright)' }} />
+            <span style={{ fontWeight: 700, fontSize: '13px' }}>Filter & Sort</span>
+            {activeFiltersCount > 0 && (
+              <span className="badge badge-escrow" style={{ padding: '2px 6px', fontSize: '10px' }}>
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+          {(activeFiltersCount > 0 || searchQuery || selectedGame !== 'all' || selectedCategory !== 'all') && (
+            <button className="btn btn-ghost btn-sm" onClick={handleResetFilters} style={{ fontSize: '12px' }}>
+              Reset All
+            </button>
+          )}
+        </div>
+
+        {/* Backdrop for mobile drawer */}
+        {isMobileFilterOpen && (
+          <div className="mobile-filter-backdrop mobile-only" onClick={() => setIsMobileFilterOpen(false)} />
+        )}
+
         <div className="marketplace-layout">
           {/* Left Sidebar Filters */}
           <FilterSidebar
@@ -280,6 +305,8 @@ export default function App() {
             setSortBy={setSortBy}
             selectedCurrency={selectedCurrency}
             onResetFilters={handleResetFilters}
+            isOpenMobile={isMobileFilterOpen}
+            onCloseMobile={() => setIsMobileFilterOpen(false)}
           />
 
           {/* Right Product Grid */}
