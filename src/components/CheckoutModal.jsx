@@ -1,67 +1,60 @@
 import React, { useState } from 'react';
-import { X, ShieldCheck, Wallet, Check, AlertCircle, Loader2, Lock } from 'lucide-react';
+import { X, ShieldCheck, AlertCircle, Loader2, Lock, CreditCard, Smartphone } from 'lucide-react';
 import { CURRENCIES } from '../data/mockData';
-import { VisaMastercardIcon, TetherUsdtIcon, BitcoinIcon, PayPalIcon, GameMonogram } from './Icons';
+import { ProductLogo, TetherUsdtIcon } from './Icons';
 
 export default function CheckoutModal({
   product,
   selectedCurrency,
-  walletBalance,
+  _walletBalance = 1000,
   onClose,
   onCompleteOrder
 }) {
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
-  const [includeInsurance, setIncludeInsurance] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('upi');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('customer@example.com');
 
   if (!product) return null;
 
-  const currency = CURRENCIES[selectedCurrency];
+  const currency = CURRENCIES[selectedCurrency] || CURRENCIES.INR;
   const basePrice = product.price * currency.rate;
-  const insurancePrice = includeInsurance ? 2.99 * currency.rate : 0;
-  const platformFee = (product.price * 0.02) * currency.rate; // 2% escrow protocol fee
-  const totalPrice = basePrice + insurancePrice + platformFee;
-
-  const canPayWithWallet = walletBalance * currency.rate >= totalPrice;
+  const totalPrice = basePrice;
 
   const handlePay = () => {
     setErrorMsg('');
-    if (paymentMethod === 'wallet' && !canPayWithWallet) {
-      setErrorMsg('Insufficient account balance. Please top up or select an alternative payment rail.');
-      return;
-    }
-
     setIsProcessing(true);
 
     setTimeout(() => {
       setIsProcessing(false);
       const newOrder = {
-        orderId: 'NL-' + Math.floor(100000 + Math.random() * 900000),
+        orderId: 'NX-' + Math.floor(100000 + Math.random() * 900000),
         product: product,
         totalAmount: totalPrice,
         currency: selectedCurrency,
         paymentMethod: paymentMethod,
-        insurance: includeInsurance,
+        customerEmail: customerEmail,
         timestamp: new Date().toISOString(),
-        escrowStatus: 'held', // 'held' | 'released' | 'disputed'
+        escrowStatus: 'held', // held / released
         sellerChat: [
-          { sender: 'system', text: `VaultShield™ Escrow commitment secured: ${currency.symbol}${totalPrice.toFixed(2)}. Automated credentials dispatched.` },
-          { sender: 'seller', text: `Hello, thank you for securing ${product.title}. The credentials have been auto-dispatched to your VaultShield panel above.` },
-          { sender: 'seller', text: `Please test login within your warranty window. Let me know here if you have any questions!` }
+          { sender: 'system', text: `Order confirmed for ${product.title}. Automated digital dispatch completed.` },
+          { sender: 'seller', text: `Hi! Thank you for ordering from Nexa Digitals. Your credentials & activation instructions are available above.` },
+          { sender: 'seller', text: `If you have any questions, our support team is available 24/7!` }
         ]
       };
       onCompleteOrder(newOrder, totalPrice / currency.rate);
-    }, 1800);
+    }, 1200);
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+      <div className="modal-dialog checkout-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={20} style={{ color: 'var(--emerald-glow)' }} />
-            <span className="modal-title">VaultShield™ Secure Escrow Checkout</span>
+            <ShieldCheck size={20} style={{ color: '#059669' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111111' }}>
+              Nexa Secure Checkout
+            </h3>
           </div>
           <button className="modal-close-btn" onClick={onClose} disabled={isProcessing}>
             <X size={18} />
@@ -69,203 +62,104 @@ export default function CheckoutModal({
         </div>
 
         <div className="modal-body">
-          {/* Item Mini Card */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '14px',
-            padding: '14px',
-            background: 'var(--bg-card)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)',
-            marginBottom: '20px'
-          }}>
-            <GameMonogram code="PRO" />
+          {/* Item Summary Card */}
+          <div className="checkout-product-preview">
+            <div className="checkout-product-logo">
+              <ProductLogo type={product.iconType} size={40} />
+            </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '11px', color: 'var(--violet-light)', fontWeight: 700 }}>
-                {product.game}
-              </div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#111111' }}>
                 {product.title}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                Seller: {product.seller.name} • {product.deliverySpeed}
+              <div style={{ fontSize: '13px', color: '#6B7280' }}>
+                {product.plan || '1 Month Plan'} • Instant Dispatch (&lt; 60s)
               </div>
             </div>
+            <div style={{ fontSize: '18px', fontWeight: 900, color: '#111111' }}>
+              {currency.symbol}{totalPrice.toFixed(0)}
+            </div>
+          </div>
+
+          {/* Delivery Email Input */}
+          <div style={{ marginBottom: '18px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
+              Delivery Email (Credentials sent here)
+            </label>
+            <input
+              type="email"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                height: '42px',
+                padding: '0 14px',
+                borderRadius: '8px',
+                border: '1px solid #D1D5DB',
+                fontSize: '13.5px',
+                outline: 'none',
+                background: '#FFFFFF'
+              }}
+            />
           </div>
 
           {/* Payment Method Selector */}
           <div style={{ marginBottom: '20px' }}>
-            <label className="filter-label">Select Settlement Method</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '8px' }}>
+              Select Payment Method
+            </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-              {/* Wallet */}
-              <div
-                onClick={() => setPaymentMethod('wallet')}
-                style={{
-                  padding: '12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: paymentMethod === 'wallet' ? '#F5F3FF' : '#FFFFFF',
-                  border: paymentMethod === 'wallet' ? '1.5px solid var(--violet-bright)' : '1px solid var(--border-medium)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
+              {/* UPI */}
+              <button
+                type="button"
+                className={`payment-option-card ${paymentMethod === 'upi' ? 'selected' : ''}`}
+                onClick={() => setPaymentMethod('upi')}
               >
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
-                  background: '#ECFDF5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--emerald-glow)'
-                }}>
-                  <Wallet size={18} />
+                <Smartphone size={20} style={{ color: '#059669' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700 }}>UPI / QR</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>GPay, PhonePe, Paytm</div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700 }}>Nexus Balance</div>
-                  <div style={{ fontSize: '11px', color: canPayWithWallet ? 'var(--emerald-glow)' : 'var(--rose-primary)' }}>
-                    Bal: {currency.symbol}{(walletBalance * currency.rate).toFixed(2)}
-                  </div>
-                </div>
-              </div>
+              </button>
 
-              {/* Credit / Debit Card */}
-              <div
+              {/* Cards */}
+              <button
+                type="button"
+                className={`payment-option-card ${paymentMethod === 'card' ? 'selected' : ''}`}
                 onClick={() => setPaymentMethod('card')}
-                style={{
-                  padding: '12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: paymentMethod === 'card' ? '#F5F3FF' : '#FFFFFF',
-                  border: paymentMethod === 'card' ? '1.5px solid var(--violet-bright)' : '1px solid var(--border-medium)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
               >
-                <VisaMastercardIcon size={20} />
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700 }}>Credit / Debit Card</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Visa, Mastercard, Amex</div>
+                <CreditCard size={20} style={{ color: '#2563EB' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700 }}>Debit / Credit Card</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Visa, Mastercard, RuPay</div>
                 </div>
-              </div>
+              </button>
+
+              {/* NetBanking */}
+              <button
+                type="button"
+                className={`payment-option-card ${paymentMethod === 'netbanking' ? 'selected' : ''}`}
+                onClick={() => setPaymentMethod('netbanking')}
+              >
+                <ShieldCheck size={20} style={{ color: '#7C3AED' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700 }}>NetBanking</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>All major banks</div>
+                </div>
+              </button>
 
               {/* Crypto */}
-              <div
+              <button
+                type="button"
+                className={`payment-option-card ${paymentMethod === 'crypto' ? 'selected' : ''}`}
                 onClick={() => setPaymentMethod('crypto')}
-                style={{
-                  padding: '12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: paymentMethod === 'crypto' ? '#F5F3FF' : '#FFFFFF',
-                  border: paymentMethod === 'crypto' ? '1.5px solid var(--violet-bright)' : '1px solid var(--border-medium)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
               >
-                <TetherUsdtIcon size={24} />
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700 }}>USDT / Bitcoin</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>TRC-20 / ERC-20 (Instant)</div>
+                <TetherUsdtIcon size={20} />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700 }}>USDT / Crypto</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Web3 & Stablecoins</div>
                 </div>
-              </div>
-
-              {/* PayPal */}
-              <div
-                onClick={() => setPaymentMethod('paypal')}
-                style={{
-                  padding: '12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: paymentMethod === 'paypal' ? '#F5F3FF' : '#FFFFFF',
-                  border: paymentMethod === 'paypal' ? '1.5px solid var(--violet-bright)' : '1px solid var(--border-medium)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <PayPalIcon size={24} />
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700 }}>PayPal Checkout</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Buyer Protection Verified</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Extended Protection */}
-          <div
-            onClick={() => setIncludeInsurance(!includeInsurance)}
-            style={{
-              padding: '12px 16px',
-              borderRadius: 'var(--radius-md)',
-              background: includeInsurance ? '#ECFDF5' : '#FFFFFF',
-              border: includeInsurance ? '1.5px solid #A7F3D0' : '1px solid var(--border-medium)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '20px',
-              boxShadow: 'var(--shadow-sm)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '4px',
-                background: includeInsurance ? 'var(--emerald-primary)' : '#E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff'
-              }}>
-                {includeInsurance && <Check size={14} />}
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  VaultShield™ Extended Asset Warranty (+{currency.symbol}{(2.99 * currency.rate).toFixed(2)})
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                  Guaranteed asset compensation in case of post-trade developer clawbacks
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Price Breakdown */}
-          <div style={{
-            background: '#F8FAFC',
-            padding: '14px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)',
-            marginBottom: '16px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              <span>Asset Settlement Base:</span>
-              <span>{currency.symbol}{basePrice.toFixed(2)}</span>
-            </div>
-            {includeInsurance && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                <span>VaultShield™ Extended Warranty:</span>
-                <span>+{currency.symbol}{insurancePrice.toFixed(2)}</span>
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-              <span>Smart Escrow Protocol Fee (2%):</span>
-              <span>+{currency.symbol}{platformFee.toFixed(2)}</span>
-            </div>
-            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 800 }}>
-              <span>Total Locked in Escrow:</span>
-              <span style={{ color: 'var(--emerald-glow)' }}>{currency.symbol}{totalPrice.toFixed(2)}</span>
+              </button>
             </div>
           </div>
 
@@ -274,37 +168,62 @@ export default function CheckoutModal({
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '10px 14px',
-              background: 'rgba(244, 63, 94, 0.1)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              borderRadius: 'var(--radius-sm)',
-              color: '#fda4af',
+              color: '#DC2626',
               fontSize: '13px',
+              padding: '10px 14px',
+              background: '#FEE2E2',
+              borderRadius: '8px',
               marginBottom: '14px'
             }}>
               <AlertCircle size={16} />
               <span>{errorMsg}</span>
             </div>
           )}
-        </div>
 
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose} disabled={isProcessing}>
-            Cancel
-          </button>
-          <button className="btn btn-emerald btn-lg" onClick={handlePay} disabled={isProcessing} style={{ minWidth: '190px' }}>
+          {/* Price Breakdown */}
+          <div className="checkout-summary-box">
+            <div className="summary-line">
+              <span>{product.title}</span>
+              <span>{currency.symbol}{basePrice.toFixed(0)}</span>
+            </div>
+            <div className="summary-line">
+              <span>Instant Digital Dispatch</span>
+              <span style={{ color: '#059669', fontWeight: 700 }}>FREE</span>
+            </div>
+            <div className="summary-line">
+              <span>30-Day Guarantee</span>
+              <span style={{ color: '#059669', fontWeight: 700 }}>INCLUDED</span>
+            </div>
+            <div className="summary-divider" />
+            <div className="summary-line total-line">
+              <span>Total Payable</span>
+              <span>{currency.symbol}{totalPrice.toFixed(0)}</span>
+            </div>
+          </div>
+
+          {/* Pay Button */}
+          <button
+            className="btn-checkout-primary"
+            onClick={handlePay}
+            disabled={isProcessing}
+            style={{ marginTop: '20px' }}
+          >
             {isProcessing ? (
               <>
-                <Loader2 size={18} className="pulse-animation" />
-                <span>Securing Vault Escrow...</span>
+                <Loader2 size={18} className="spin-animation" />
+                <span>Processing Order...</span>
               </>
             ) : (
               <>
                 <Lock size={16} />
-                <span>Authorize {currency.symbol}{totalPrice.toFixed(2)}</span>
+                <span>Pay {currency.symbol}{totalPrice.toFixed(0)} & Reveal Credentials</span>
               </>
             )}
           </button>
+
+          <p style={{ textAlign: 'center', fontSize: '11.5px', color: '#6B7280', marginTop: '12px' }}>
+            🔒 256-bit SSL encrypted. 30-day money-back guarantee.
+          </p>
         </div>
       </div>
     </div>

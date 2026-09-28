@@ -1,195 +1,229 @@
 import React, { useState } from 'react';
-import { Search, X, ShieldCheck, Wallet, PlusCircle, PackageCheck, Menu } from 'lucide-react';
+import { Search, X, ShoppingBag, Menu } from 'lucide-react';
+import { NexaLogo } from './Icons';
 import { CURRENCIES } from '../data/mockData';
-import { NexusLogo } from './Icons';
 
 export default function Header({
   searchQuery,
   setSearchQuery,
   selectedCurrency,
   setSelectedCurrency,
-  walletBalance,
-  onOpenSellerModal,
-  onOpenEscrowInfo,
-  onOpenWalletModal,
-  activeOrdersCount,
-  onOpenOrdersModal
+  cartCount = 2,
+  onOpenCart,
+  onOpenSignIn,
+  onOpenHowItWorks,
+  onOpenFaq,
+  onSelectCategory
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const scrollToSection = (id) => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <header className="site-header">
-      <div className="container header-inner">
+    <header className="nexa-header">
+      <div className="container header-container">
         {/* Brand Logo */}
-        <div className="logo-container" onClick={() => { setSearchQuery(''); }}>
-          <NexusLogo size={34} />
-          <div className="logo-brand">
-            <span className="logo-title">NEXUSLOOT</span>
-            <span className="logo-sub">VAULTSHIELD™ ESCROW</span>
-          </div>
+        <div
+          className="header-brand"
+          onClick={() => {
+            setSearchQuery('');
+            if (onSelectCategory) onSelectCategory('all');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          <NexaLogo size={36} />
         </div>
 
-        {/* Global Search Bar (Desktop) */}
-        <div className="header-search desktop-only">
-          <div className="search-input-wrapper">
-            <Search className="search-icon" size={17} />
+        {/* Center Navigation Links (Desktop) */}
+        <nav className="header-nav desktop-only">
+          <button
+            className="nav-link active"
+            onClick={() => {
+              if (onSelectCategory) onSelectCategory('all');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            Home
+          </button>
+          <button
+            className="nav-link"
+            onClick={() => scrollToSection('popular-products')}
+          >
+            Products
+          </button>
+          <button
+            className="nav-link"
+            onClick={() => scrollToSection('categories-bar')}
+          >
+            Categories
+          </button>
+          <button
+            className="nav-link"
+            onClick={() => {
+              if (onOpenHowItWorks) onOpenHowItWorks();
+              else scrollToSection('how-it-works');
+            }}
+          >
+            How It Works
+          </button>
+          <button
+            className="nav-link"
+            onClick={() => {
+              if (onOpenFaq) onOpenFaq();
+              else scrollToSection('testimonials');
+            }}
+          >
+            FAQ
+          </button>
+        </nav>
+
+        {/* Search Bar */}
+        <div className="header-search-bar desktop-only">
+          <div className="search-pill-wrapper">
+            <Search size={16} className="search-pill-icon" />
             <input
               type="text"
-              className="search-input"
-              placeholder="Search verified accounts, gold, rare skins, boosting services..."
+              placeholder="Search for products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-pill-input"
             />
             {searchQuery && (
-              <button className="search-clear-btn" onClick={() => setSearchQuery('')} aria-label="Clear search">
-                <X size={15} />
+              <button
+                className="search-pill-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <X size={14} />
               </button>
             )}
           </div>
         </div>
 
-        {/* Desktop Header Actions */}
-        <div className="header-actions desktop-only">
-          {/* Escrow Security Brief */}
-          <button className="btn btn-ghost btn-sm" onClick={onOpenEscrowInfo} title="VaultShield Escrow Architecture">
-            <ShieldCheck size={16} style={{ color: 'var(--emerald-glow)' }} />
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Buyer Protection</span>
-          </button>
-
-          {/* Currency Switcher */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        {/* Right Actions */}
+        <div className="header-right-actions">
+          {/* Subtle Currency Selector */}
+          <div className="currency-pill-container desktop-only">
             <select
-              className="currency-select"
+              className="currency-pill-select"
               value={selectedCurrency}
               onChange={(e) => setSelectedCurrency(e.target.value)}
-              aria-label="Select currency"
-            >
-              {Object.entries(CURRENCIES).map(([code, cur]) => (
-                <option key={code} value={code} style={{ background: '#FFFFFF', color: '#0F172A' }}>
-                  {cur.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Wallet Balance */}
-          <button className="wallet-badge" onClick={onOpenWalletModal} title="Manage Treasury Balance">
-            <Wallet size={15} style={{ color: 'var(--emerald-glow)' }} />
-            <span className="wallet-amount">
-              {CURRENCIES[selectedCurrency].symbol}
-              {(walletBalance * CURRENCIES[selectedCurrency].rate).toFixed(2)}
-            </span>
-          </button>
-
-          {/* Active Orders */}
-          <button className="btn btn-outline btn-sm" onClick={onOpenOrdersModal} title="View Active Escrow Orders">
-            <PackageCheck size={16} />
-            <span>Orders</span>
-            {activeOrdersCount > 0 && (
-              <span className="badge badge-hot" style={{ padding: '1px 6px', fontSize: '10px' }}>
-                {activeOrdersCount}
-              </span>
-            )}
-          </button>
-
-          {/* Merchant Sell CTA */}
-          <button className="btn btn-primary btn-sm" onClick={onOpenSellerModal}>
-            <PlusCircle size={15} />
-            <span>List Offer</span>
-          </button>
-        </div>
-
-        {/* Mobile Header Quick Actions */}
-        <div className="mobile-header-actions mobile-only">
-          <button className="wallet-badge" onClick={onOpenWalletModal} style={{ padding: '5px 10px' }}>
-            <Wallet size={14} style={{ color: 'var(--emerald-glow)' }} />
-            <span className="wallet-amount" style={{ fontSize: '12px' }}>
-              {CURRENCIES[selectedCurrency].symbol}
-              {(walletBalance * CURRENCIES[selectedCurrency].rate).toFixed(0)}
-            </span>
-          </button>
-
-          <button className="btn btn-primary btn-sm" onClick={onOpenSellerModal} style={{ padding: '6px 10px', fontSize: '12px' }}>
-            <PlusCircle size={14} />
-            <span>Sell</span>
-          </button>
-
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-            style={{ padding: '6px 8px' }}
-          >
-            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Search Row (Always accessible on phones) */}
-      <div className="mobile-search-bar mobile-only">
-        <div className="search-input-wrapper">
-          <Search className="search-icon" size={16} />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search accounts, gold, skins..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="search-clear-btn" onClick={() => setSearchQuery('')} aria-label="Clear search">
-              <X size={15} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile Dropdown Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="mobile-drawer-menu mobile-only">
-          <div className="mobile-drawer-item" onClick={() => { setMobileMenuOpen(false); onOpenEscrowInfo(); }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ShieldCheck size={18} style={{ color: 'var(--emerald-glow)' }} />
-              <span style={{ fontWeight: 600, fontSize: '14px' }}>How VaultShield™ Works</span>
-            </div>
-            <span className="badge badge-instant">Verified</span>
-          </div>
-
-          <div className="mobile-drawer-item" onClick={() => { setMobileMenuOpen(false); onOpenOrdersModal(); }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <PackageCheck size={18} style={{ color: 'var(--violet-primary)' }} />
-              <span style={{ fontWeight: 600, fontSize: '14px' }}>My Active Escrow Orders</span>
-            </div>
-            {activeOrdersCount > 0 && (
-              <span className="badge badge-hot">{activeOrdersCount} Active</span>
-            )}
-          </div>
-
-          <div className="mobile-drawer-item" onClick={() => { setMobileMenuOpen(false); onOpenWalletModal(); }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Wallet size={18} style={{ color: 'var(--emerald-glow)' }} />
-              <span style={{ fontWeight: 600, fontSize: '14px' }}>Top-Up Wallet Balance</span>
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--emerald-glow)' }}>
-              {CURRENCIES[selectedCurrency].symbol}
-              {(walletBalance * CURRENCIES[selectedCurrency].rate).toFixed(2)}
-            </span>
-          </div>
-
-          <div className="mobile-drawer-item" style={{ justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 600, fontSize: '14px' }}>Active Currency:</span>
-            <select
-              className="currency-select"
-              value={selectedCurrency}
-              onChange={(e) => setSelectedCurrency(e.target.value)}
-              style={{ padding: '4px 8px', fontSize: '12px' }}
+              aria-label="Currency"
             >
               {Object.entries(CURRENCIES).map(([code, cur]) => (
                 <option key={code} value={code}>
-                  {cur.label}
+                  {cur.symbol} {code}
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Cart Icon with Counter Badge */}
+          <button
+            className="header-cart-btn"
+            onClick={onOpenCart}
+            aria-label="View Shopping Cart"
+            title="Shopping Cart"
+          >
+            <ShoppingBag size={20} />
+            {cartCount > 0 && (
+              <span className="cart-badge">{cartCount}</span>
+            )}
+          </button>
+
+          {/* Sign In Button */}
+          <button
+            className="btn-signin desktop-only"
+            onClick={onOpenSignIn}
+          >
+            <span>Sign In</span>
+          </button>
+
+          {/* Mobile Hamburger Toggle */}
+          <button
+            className="mobile-hamburger mobile-only"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="mobile-dropdown-menu mobile-only">
+          <div style={{ marginBottom: '16px' }}>
+            <div className="search-pill-wrapper">
+              <Search size={16} className="search-pill-icon" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-pill-input"
+              />
+            </div>
+          </div>
+
+          <div className="mobile-nav-links">
+            <button
+              className="mobile-nav-link"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onSelectCategory) onSelectCategory('all');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              Home
+            </button>
+            <button
+              className="mobile-nav-link"
+              onClick={() => scrollToSection('popular-products')}
+            >
+              Products
+            </button>
+            <button
+              className="mobile-nav-link"
+              onClick={() => scrollToSection('categories-bar')}
+            >
+              Categories
+            </button>
+            <button
+              className="mobile-nav-link"
+              onClick={() => scrollToSection('how-it-works')}
+            >
+              How It Works
+            </button>
+            <button
+              className="mobile-nav-link"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onOpenFaq) onOpenFaq();
+              }}
+            >
+              FAQ
+            </button>
+          </div>
+
+          <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+            <button
+              className="btn-signin"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenSignIn();
+              }}
+            >
+              Sign In
+            </button>
           </div>
         </div>
       )}

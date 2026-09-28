@@ -1,26 +1,26 @@
 import React from 'react';
-import { X, ShieldCheck, Zap, Star, CheckCircle, Clock, Globe, Shield, RefreshCw } from 'lucide-react';
-import { CURRENCIES, POPULAR_GAMES } from '../data/mockData';
-import { GameMonogram } from './Icons';
+import { X, ShieldCheck, Zap, Star, CheckCircle, Clock, Check, ShoppingBag, ArrowRight } from 'lucide-react';
+import { CURRENCIES } from '../data/mockData';
+import { ProductLogo } from './Icons';
 
-export default function ProductDetailModal({ product, selectedCurrency, onClose, onBuyNow }) {
+export default function ProductDetailModal({ product, selectedCurrency, onClose, onBuyNow, onAddToCart }) {
   if (!product) return null;
 
-  const currency = CURRENCIES[selectedCurrency];
-  const convertedPrice = (product.price * currency.rate).toFixed(2);
-  const gameData = POPULAR_GAMES.find((g) => g.id === product.gameId) || { code: 'GAME' };
+  const currency = CURRENCIES[selectedCurrency] || CURRENCIES.INR;
+  const currentPrice = (product.price * currency.rate).toFixed(0);
+  const origPrice = product.originalPrice ? (product.originalPrice * currency.rate).toFixed(0) : null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px' }}>
+      <div className="modal-dialog product-detail-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="badge badge-instant">
-              <Zap size={12} />
-              <span>{product.deliveryType === 'instant' ? 'Instant Dispatch' : 'Managed Delivery'}</span>
+              <Zap size={13} />
+              <span>Instant Dispatch (&lt; 60s)</span>
             </span>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-              Listing ID: {product.id}
+            <span style={{ fontSize: '12px', color: '#6B7280' }}>
+              Item #{product.id}
             </span>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
@@ -29,153 +29,142 @@ export default function ProductDetailModal({ product, selectedCurrency, onClose,
         </div>
 
         <div className="modal-body">
-          {/* Title & Game */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <GameMonogram code={gameData.code || 'GAME'} />
-              <span style={{ fontSize: '13px', color: 'var(--violet-light)', fontWeight: 700 }}>
-                {product.game}
-              </span>
-              <span style={{ color: 'var(--text-muted)' }}>•</span>
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
-                {product.category}
-              </span>
+          {/* Product Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '16px',
+              background: '#F9FAFB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <ProductLogo type={product.iconType} size={50} />
             </div>
-            <h2 style={{ fontSize: '22px', fontWeight: 800, lineHeight: 1.3 }}>
-              {product.title}
-            </h2>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
+                  {product.category}
+                </span>
+                {product.badge && (
+                  <span className={`product-badge badge-${product.badgeType || 'default'}`} style={{ fontSize: '11px', padding: '2px 8px' }}>
+                    {product.badge}
+                  </span>
+                )}
+              </div>
+              <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#111111' }}>
+                {product.title}
+              </h2>
+              <p style={{ fontSize: '14px', color: '#6B7280', fontWeight: 600 }}>
+                {product.plan || '1 Month Plan'}
+              </p>
+            </div>
           </div>
 
-          {/* Key Specs Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-            gap: '12px',
-            marginBottom: '20px',
-            padding: '14px',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-md)'
-          }}>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Region</div>
-              <div style={{ fontSize: '13px', fontWeight: 600 }}>{product.region}</div>
+          {/* Key Highlights */}
+          <div className="product-highlights-box">
+            <div className="highlight-item">
+              <span className="highlight-label">Delivery Speed</span>
+              <span className="highlight-val" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Zap size={14} /> Instant (&lt; 60s)
+              </span>
             </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Platform</div>
-              <div style={{ fontSize: '13px', fontWeight: 600 }}>{product.platform || 'PC / Multi'}</div>
+            <div className="highlight-item">
+              <span className="highlight-label">Warranty</span>
+              <span className="highlight-val">{product.warranty || '30-Day Nexa Full Warranty'}</span>
             </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Dispatch Speed</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--emerald-glow)' }}>{product.deliverySpeed}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Escrow Warranty</div>
-              <div style={{ fontSize: '13px', fontWeight: 600 }}>{product.warranty}</div>
+            <div className="highlight-item">
+              <span className="highlight-label">Product Type</span>
+              <span className="highlight-val">100% Genuine Digital</span>
             </div>
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>
-              Product Details & Specifications
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', color: '#111111' }}>
+              About this product
             </h4>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+            <p style={{ fontSize: '14px', color: '#4B5563', lineHeight: 1.6 }}>
               {product.description}
             </p>
           </div>
 
-          {/* Seller Profile Summary */}
-          <div style={{
-            padding: '16px',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '14px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <img
-                src={product.seller.avatar}
-                alt={product.seller.name}
-                style={{ width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover' }}
-              />
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '15px' }}>
-                  <span>{product.seller.name}</span>
-                  {product.seller.verified && (
-                    <CheckCircle size={15} style={{ color: '#38bdf8' }} />
-                  )}
-                  <span className="badge badge-gold" style={{ fontSize: '10px' }}>
-                    {product.seller.badge}
+          {/* Feature List */}
+          {product.features && product.features.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', color: '#111111' }}>
+                What's included:
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
+                {product.features.map((feat, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#374151' }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: '#DCFCE7',
+                      color: '#16A34A',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={12} />
+                    </div>
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bottom Price & Purchase CTA */}
+          <div className="product-modal-footer">
+            <div className="modal-price-display">
+              <span style={{ fontSize: '12px', color: '#6B7280', textTransform: 'uppercase', fontWeight: 700 }}>
+                Special Price
+              </span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                <span style={{ fontSize: '26px', fontWeight: 900, color: '#111111' }}>
+                  {currency.symbol}{currentPrice}
+                </span>
+                {origPrice && (
+                  <span style={{ fontSize: '16px', color: '#9CA3AF', textDecoration: 'line-through' }}>
+                    {currency.symbol}{origPrice}
                   </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  <span style={{ color: 'var(--amber-primary)', fontWeight: 700 }}>★ {product.seller.rating}</span>
-                  <span>•</span>
-                  <span>{product.seller.reviewsCount} verified settlements</span>
-                  <span>•</span>
-                  <span>{product.seller.completionRate} fulfillment rate</span>
-                </div>
+                )}
               </div>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Response Latency</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--emerald-glow)' }}>
-                {product.seller.avgResponse}
-              </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {onAddToCart && (
+                <button
+                  className="btn-add-to-cart"
+                  style={{ width: 'auto', padding: '0 20px', height: '46px', background: '#F3F4F6', color: '#111111' }}
+                  onClick={() => {
+                    onAddToCart(product);
+                  }}
+                >
+                  <ShoppingBag size={16} />
+                  <span>Add to Cart</span>
+                </button>
+              )}
+
+              <button
+                className="btn-signin"
+                style={{ padding: '0 28px', height: '46px', fontSize: '15px' }}
+                onClick={() => {
+                  onClose();
+                  onBuyNow(product);
+                }}
+              >
+                <span>Buy Now</span>
+                <ArrowRight size={16} />
+              </button>
             </div>
           </div>
-
-          {/* VaultShield Escrow Guarantee Box */}
-          <div style={{
-            padding: '16px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(16, 185, 129, 0.07)',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
-            display: 'flex',
-            gap: '14px',
-            alignItems: 'flex-start'
-          }}>
-            <ShieldCheck size={26} style={{ color: 'var(--emerald-glow)', flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--emerald-glow)', marginBottom: '4px' }}>
-                VaultShield™ Institutional Escrow Protection
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Funds are held in a segregated settlement vault. The seller cannot withdraw payment until you test login credentials, confirm asset transfer, and authorize final release.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <div style={{ marginRight: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Settlement Price</span>
-            <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-              {currency.symbol}{convertedPrice}
-            </span>
-          </div>
-
-          <button className="btn btn-outline" onClick={onClose}>
-            Cancel
-          </button>
-
-          <button
-            className="btn btn-primary btn-lg"
-            onClick={() => {
-              onClose();
-              onBuyNow(product);
-            }}
-          >
-            <ShieldCheck size={18} />
-            <span>Lock into VaultShield™ Escrow</span>
-          </button>
         </div>
       </div>
     </div>

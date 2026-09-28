@@ -1,96 +1,79 @@
 import React from 'react';
-import { Zap, ShieldCheck, Star, CheckCircle, Clock } from 'lucide-react';
-import { CURRENCIES, POPULAR_GAMES } from '../data/mockData';
-import { GameMonogram } from './Icons';
+import { ShoppingCart, Check } from 'lucide-react';
+import { ProductLogo } from './Icons';
+import { CURRENCIES } from '../data/mockData';
 
-export default function ProductCard({ product, selectedCurrency, onSelectProduct, onQuickBuy }) {
-  const currency = CURRENCIES[selectedCurrency];
-  const convertedPrice = (product.price * currency.rate).toFixed(2);
-  const gameData = POPULAR_GAMES.find((g) => g.id === product.gameId) || { code: 'GAME' };
+export default function ProductCard({
+  product,
+  selectedCurrency,
+  onSelectProduct,
+  onAddToCart,
+  isInCart = false
+}) {
+  const currency = CURRENCIES[selectedCurrency] || CURRENCIES.INR;
+  const currentPrice = (product.price * currency.rate).toFixed(0);
+  const origPrice = product.originalPrice ? (product.originalPrice * currency.rate).toFixed(0) : null;
 
   return (
-    <div className="product-card" onClick={() => onSelectProduct(product)}>
-      <div>
-        {/* Top Badges */}
-        <div className="product-card-top">
-          <span className="game-badge">
-            <GameMonogram code={gameData.code || 'GAME'} />
-            <span>{product.game}</span>
+    <div
+      className="nexa-product-card"
+      onClick={() => onSelectProduct(product)}
+    >
+      {/* Top Badge area */}
+      <div className="product-badge-row">
+        {product.badge ? (
+          <span className={`product-badge badge-${product.badgeType || 'default'}`}>
+            {product.badge}
           </span>
-          {product.deliveryType === 'instant' ? (
-            <span className="badge badge-instant">
-              <Zap size={12} />
-              <span>Instant Dispatch</span>
-            </span>
-          ) : (
-            <span className="badge badge-escrow">
-              <Clock size={12} />
-              <span>{product.deliverySpeed}</span>
-            </span>
-          )}
-        </div>
-
-        {/* Title */}
-        <h3 className="product-title" title={product.title}>
-          {product.title}
-        </h3>
-
-        {/* Tags */}
-        <div className="product-tags">
-          {product.tags && product.tags.slice(0, 3).map((tag, idx) => (
-            <span key={idx} className="tag-pill">
-              {tag}
-            </span>
-          ))}
-        </div>
+        ) : (
+          <span className="product-badge-placeholder" />
+        )}
       </div>
 
-      <div>
-        {/* Seller Info */}
-        <div className="product-seller-row">
-          <img
-            src={product.seller.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80'}
-            alt={product.seller.name}
-            className="seller-avatar"
-            onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80';
-            }}
-          />
-          <div className="seller-meta">
-            <span className="seller-name">
-              {product.seller.name}
-              {product.seller.verified && (
-                <CheckCircle size={13} style={{ color: '#38bdf8' }} title="Verified Merchant" />
-              )}
-            </span>
-            <span className="seller-stats">
-              <span className="rating-star">★ {product.seller.rating}</span>
-              <span>•</span>
-              <span>{product.seller.reviewsCount} completed</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Price & Action */}
-        <div className="product-card-bottom">
-          <div className="price-box">
-            <span className="price-sub">Escrow Protected</span>
-            <span className="price-value">
-              {currency.symbol}{convertedPrice}
-            </span>
-          </div>
-
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickBuy(product);
-            }}
-          >
-            <span>Secure Order</span>
-          </button>
-        </div>
+      {/* Brand Product Icon */}
+      <div className="product-logo-container">
+        <ProductLogo type={product.iconType} size={48} />
       </div>
+
+      {/* Product Information */}
+      <div className="product-info-block">
+        <h3 className="product-card-title">{product.title}</h3>
+        <p className="product-card-plan">{product.plan || '1 Month Plan'}</p>
+      </div>
+
+      {/* Price Block */}
+      <div className="product-price-block">
+        <span className="price-current">
+          {currency.symbol}{currentPrice}
+        </span>
+        {origPrice && (
+          <span className="price-strikethrough">
+            {currency.symbol}{origPrice}
+          </span>
+        )}
+      </div>
+
+      {/* Add To Cart Button */}
+      <button
+        className={`btn-add-to-cart ${isInCart ? 'added' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onAddToCart(product);
+        }}
+        aria-label={`Add ${product.title} to cart`}
+      >
+        {isInCart ? (
+          <>
+            <Check size={16} />
+            <span>Added</span>
+          </>
+        ) : (
+          <>
+            <ShoppingCart size={15} />
+            <span>Add to Cart</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }

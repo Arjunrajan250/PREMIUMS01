@@ -1,18 +1,18 @@
 import React from 'react';
-import { X, PackageCheck, ArrowRight, ShieldCheck, Clock } from 'lucide-react';
-import { CURRENCIES, POPULAR_GAMES } from '../data/mockData';
-import { GameMonogram } from './Icons';
+import { X, PackageCheck, ArrowRight } from 'lucide-react';
+import { CURRENCIES } from '../data/mockData';
+import { ProductLogo } from './Icons';
 
 export default function OrdersListModal({ orders, onClose, onSelectOrder, selectedCurrency }) {
-  const currency = CURRENCIES[selectedCurrency] || CURRENCIES.USD;
+  const currency = CURRENCIES[selectedCurrency] || CURRENCIES.INR;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '660px' }}>
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PackageCheck size={20} style={{ color: 'var(--violet-bright)' }} />
-            <span className="modal-title">Escrow Transactions & Portfolios ({orders.length})</span>
+            <PackageCheck size={20} style={{ color: '#111111' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Your Orders & Subscriptions ({orders.length})</h3>
           </div>
           <button className="modal-close-btn" onClick={onClose}>
             <X size={18} />
@@ -21,28 +21,26 @@ export default function OrdersListModal({ orders, onClose, onSelectOrder, select
 
         <div className="modal-body">
           {orders.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+            <div style={{ textAlign: 'center', padding: '40px 0', color: '#6B7280' }}>
               <div style={{
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: '#F3F4F6',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 12px',
-                color: 'var(--text-muted)'
+                color: '#6B7280'
               }}>
                 <PackageCheck size={24} />
               </div>
-              <h4 style={{ color: 'var(--text-primary)', marginBottom: '4px' }}>No Active Transactions</h4>
-              <p style={{ fontSize: '13px' }}>Explore verified offerings on the exchange. Active escrow orders will populate here.</p>
+              <h4 style={{ color: '#111111', marginBottom: '4px', fontWeight: 700 }}>No Active Orders</h4>
+              <p style={{ fontSize: '13px' }}>Your activated subscriptions and credentials will appear here.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {orders.map((order) => {
-                const gameData = POPULAR_GAMES.find((g) => g.id === order.product.gameId) || { code: 'VAL' };
-
                 return (
                   <div
                     key={order.orderId}
@@ -54,61 +52,51 @@ export default function OrdersListModal({ orders, onClose, onSelectOrder, select
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '14px 18px',
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
+                      padding: '14px 16px',
+                      background: '#FAF8F3',
+                      border: '1px solid #EAE5DB',
+                      borderRadius: '12px',
                       cursor: 'pointer',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--violet-bright)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <GameMonogram code={gameData.code} />
+                      <ProductLogo type={order.product?.iconType} size={36} />
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 800 }}>
                             #{order.orderId}
                           </span>
-                          <span className={`badge ${order.escrowStatus === 'released' ? 'badge-instant' : 'badge-gold'}`} style={{ fontSize: '10px' }}>
-                            {order.escrowStatus === 'released' ? 'Settled' : 'In Escrow'}
+                          <span style={{
+                            fontSize: '10.5px',
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: '9999px',
+                            background: '#DCFCE7',
+                            color: '#16A34A'
+                          }}>
+                            Instant Dispatched
                           </span>
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          {order.product.title.slice(0, 48)}...
+                        <div style={{ fontSize: '12.5px', color: '#6B7280', marginTop: '2px' }}>
+                          {order.product?.title}
                         </div>
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                          {currency.symbol}{(order.totalAmount).toFixed(2)}
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                          {order.product.seller.name}
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#111111' }}>
+                          {currency.symbol}{order.totalAmount?.toFixed(0)}
                         </div>
                       </div>
-                      <ArrowRight size={16} style={{ color: 'var(--violet-light)' }} />
+                      <ArrowRight size={16} color="#111111" />
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>
-            Close Portfolio
-          </button>
         </div>
       </div>
     </div>

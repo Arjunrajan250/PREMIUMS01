@@ -1,83 +1,159 @@
-import React from 'react';
-import { ShieldCheck, Lock, Award, Globe2 } from 'lucide-react';
-import { NexusLogo, VisaMastercardIcon, TetherUsdtIcon, PayPalIcon } from './Icons';
+import React, { useState } from 'react';
+import { ArrowRight, Check } from 'lucide-react';
+import {
+  NexaLogo,
+  InstagramIcon,
+  YouTubeSocialIcon,
+  DiscordSocialIcon,
+  TwitterXIcon
+} from './Icons';
 
-export default function Footer({ onOpenEscrowInfo, onOpenSellerModal }) {
+export default function Footer({ onCategoryClick, onOrdersClick, onFaqClick }) {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setTimeout(() => {
+        setEmail('');
+        setSubscribed(false);
+      }, 4000);
+    }
+  };
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <footer className="site-footer">
+    <footer className="nexa-footer">
       <div className="container">
-        <div className="footer-grid">
-          {/* Brand Col */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <NexusLogo size={32} />
-              <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-                NEXUSLOOT
-              </span>
+        <div className="footer-columns-grid">
+          {/* Col 1: Brand & Tagline */}
+          <div className="footer-col brand-col">
+            <div className="footer-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <NexaLogo size={32} />
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '18px' }}>
-              Institutional-grade peer-to-peer gaming exchange for verified accounts, virtual currencies, skins, and carry services.
-              Settled securely through VaultShield™ automated escrow holding.
+            <p className="footer-tagline">
+              Premium digital products. Better prices.
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--emerald-glow)', fontSize: '12px', fontWeight: 600 }}>
-              <ShieldCheck size={16} />
-              <span>VaultShield™ Multi-Signature Escrow Protected</span>
+            <div className="footer-social-row">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-icon-btn" aria-label="Instagram">
+                <InstagramIcon size={18} />
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="social-icon-btn" aria-label="YouTube">
+                <YouTubeSocialIcon size={18} />
+              </a>
+              <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="social-icon-btn" aria-label="Discord">
+                <DiscordSocialIcon size={18} />
+              </a>
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="social-icon-btn" aria-label="X">
+                <TwitterXIcon size={16} />
+              </a>
             </div>
           </div>
 
-          {/* Popular Categories */}
-          <div>
-            <h4 className="footer-col-title">Exchange Markets</h4>
-            <ul className="footer-link-list">
-              <li><a href="#marketplace" className="footer-link">Verified Game Accounts</a></li>
-              <li><a href="#marketplace" className="footer-link">In-Game Gold & Currencies</a></li>
-              <li><a href="#marketplace" className="footer-link">Classified Items & Skins</a></li>
-              <li><a href="#marketplace" className="footer-link">Competitive Rank Boosting</a></li>
-              <li><a href="#marketplace" className="footer-link">Digital Vouchers & Gift Cards</a></li>
+          {/* Col 2: Quick Links */}
+          <div className="footer-col">
+            <h4 className="footer-heading">Quick Links</h4>
+            <ul className="footer-links-list">
+              <li>
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('popular-products')}>Products</button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('categories-bar')}>Categories</button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('how-it-works')}>How It Works</button>
+              </li>
+              <li>
+                <button onClick={onFaqClick || (() => scrollTo('testimonials'))}>FAQ</button>
+              </li>
             </ul>
           </div>
 
-          {/* Trust & Escrow */}
-          <div>
-            <h4 className="footer-col-title">Security & Protocol</h4>
-            <ul className="footer-link-list">
-              <li><button onClick={onOpenEscrowInfo} className="footer-link" style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>VaultShield™ Escrow Architecture</button></li>
-              <li><a href="#marketplace" className="footer-link">Buyer Protection Framework</a></li>
-              <li><a href="#marketplace" className="footer-link">KYC Seller Verification Standards</a></li>
-              <li><a href="#marketplace" className="footer-link">Arbitration & Dispute Desk</a></li>
-              <li><button onClick={onOpenSellerModal} className="footer-link" style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}>Merchant Terms & Fee Schedule (5%)</button></li>
+          {/* Col 3: Support */}
+          <div className="footer-col">
+            <h4 className="footer-heading">Support</h4>
+            <ul className="footer-links-list">
+              <li>
+                <button onClick={onFaqClick}>Contact Us</button>
+              </li>
+              <li>
+                <button onClick={onOrdersClick}>Track Order</button>
+              </li>
+              <li>
+                <button onClick={onFaqClick}>Refund Policy</button>
+              </li>
+              <li>
+                <button onClick={onFaqClick}>Terms of Service</button>
+              </li>
+              <li>
+                <button onClick={onFaqClick}>Privacy Policy</button>
+              </li>
             </ul>
           </div>
 
-          {/* Supported Top Games */}
-          <div>
-            <h4 className="footer-col-title">Featured Catalogs</h4>
-            <ul className="footer-link-list">
-              <li><a href="#marketplace" className="footer-link">Valorant Accounts & Points</a></li>
-              <li><a href="#marketplace" className="footer-link">Counter-Strike 2 Skin Market</a></li>
-              <li><a href="#marketplace" className="footer-link">Roblox Blox Fruits Assets</a></li>
-              <li><a href="#marketplace" className="footer-link">World of Warcraft Retail Vaults</a></li>
-              <li><a href="#marketplace" className="footer-link">GTA Online Modded Profiles</a></li>
-              <li><a href="#marketplace" className="footer-link">Path of Exile 2 Divines</a></li>
-            </ul>
+          {/* Col 4: Categories */}
+          <div className="footer-col">
+            <h4 className="footer-heading">Categories</h4>
+            <div className="footer-categories-subgrid">
+              <ul className="footer-links-list">
+                <li><button onClick={() => onCategoryClick?.('music')}>Music</button></li>
+                <li><button onClick={() => onCategoryClick?.('video')}>Video</button></li>
+                <li><button onClick={() => onCategoryClick?.('streaming')}>Streaming</button></li>
+                <li><button onClick={() => onCategoryClick?.('ai-tools')}>AI Tools</button></li>
+              </ul>
+              <ul className="footer-links-list">
+                <li><button onClick={() => onCategoryClick?.('gaming')}>Gaming</button></li>
+                <li><button onClick={() => onCategoryClick?.('software')}>Software</button></li>
+                <li><button onClick={() => onCategoryClick?.('gift-cards')}>Gift Cards</button></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Col 5: Stay Updated */}
+          <div className="footer-col newsletter-col">
+            <h4 className="footer-heading">Stay Updated</h4>
+            <p className="newsletter-desc">Get the latest deals and offers.</p>
+            <form className="newsletter-form" onSubmit={handleSubscribe}>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="newsletter-input"
+              />
+              <button
+                type="submit"
+                className="newsletter-submit-btn"
+                aria-label="Subscribe to newsletter"
+              >
+                {subscribed ? <Check size={16} /> : <ArrowRight size={16} />}
+              </button>
+            </form>
+            {subscribed && (
+              <span className="newsletter-success">
+                ✓ You're subscribed to exclusive Nexa drops!
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Payment Methods & Bottom Bar */}
-        <div className="footer-bottom">
-          <div>
-            © {new Date().getFullYear()} NexusLoot Exchange Ltd. All rights reserved. VaultShield™ is a registered service protocol.
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Supported Rails:</span>
-            <VisaMastercardIcon size={18} />
-            <TetherUsdtIcon size={18} />
-            <PayPalIcon size={18} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <Lock size={12} style={{ color: 'var(--emerald-glow)' }} />
-              <span>256-bit TLS Encrypted</span>
-            </div>
+        {/* Bottom Sub-Footer */}
+        <div className="footer-bottom-bar">
+          <p>© {new Date().getFullYear()} NEXA DIGITALS. All rights reserved.</p>
+          <div className="footer-badges-strip">
+            <span className="footer-shield-badge">🔒 256-Bit SSL Encrypted Checkout</span>
+            <span className="footer-shield-badge">⚡ Instant Dispatch Verified</span>
           </div>
         </div>
       </div>

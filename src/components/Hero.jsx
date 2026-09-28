@@ -1,135 +1,103 @@
 import React from 'react';
-import { ShieldCheck, Zap, Star, Award, Layers, UserCheck, Coins, Shield, CreditCard, Lock, Clock } from 'lucide-react';
-import { CATEGORIES } from '../data/mockData';
+import { ArrowRight, Zap, ShieldCheck, CreditCard, Headphones } from 'lucide-react';
+import heroShowcaseImg from '../assets/hero-showcase.jpg';
 
-// Category icon map
-const CATEGORY_ICONS = {
-  Layers: Layers,
-  UserCheck: UserCheck,
-  Coins: Coins,
-  Shield: Shield,
-  Zap: Zap,
-  CreditCard: CreditCard
-};
+export default function Hero({ onExploreClick, onHowItWorksClick }) {
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
-export default function Hero({ selectedCategory, setSelectedCategory }) {
   return (
-    <section className="hero-section">
-      <div className="ambient-glow glow-top-left"></div>
-      <div className="ambient-glow glow-top-right"></div>
-
-      <div className="container hero-content">
-        <div className="hero-pill">
-          <ShieldCheck size={14} style={{ color: 'var(--emerald-glow)' }} />
-          <span>Institutional-Grade P2P Escrow Protocol</span>
-        </div>
-
-        <h1 className="hero-title">
-          Trade Gaming Accounts, Currency & Assets <br />
-          <span className="gradient-text">Protected by VaultShield™ Escrow</span>
-        </h1>
-
-        <p className="hero-subtitle">
-          Secure peer-to-peer exchange connecting verified players globally.
-          Every transaction is safeguarded by automated smart escrow holding, instantaneous credentials delivery, and 24/7 dispute coverage.
-        </p>
-
-        {/* Professional Metrics Strip */}
-        <div className="hero-stats-row">
-          <div className="hero-stat-item">
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--emerald-glow)'
-            }}>
-              <ShieldCheck size={20} />
-            </div>
-            <div className="hero-stat-info">
-              <div className="hero-stat-value">$14.8M+</div>
-              <div className="hero-stat-label">Secured in Escrow</div>
-            </div>
+    <section className="nexa-hero-section">
+      <div className="container hero-grid-wrapper">
+        {/* Left Column: Typography & CTAs */}
+        <div className="hero-left-column">
+          {/* Pill Tag */}
+          <div className="hero-badge-pill">
+            <span>PREMIUM DIGITAL PRODUCTS</span>
           </div>
 
-          <div className="hero-stat-item">
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '8px',
-              background: 'rgba(139, 92, 246, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--violet-bright)'
-            }}>
-              <Zap size={20} />
-            </div>
-            <div className="hero-stat-info">
-              <div className="hero-stat-value">&lt; 60 Seconds</div>
-              <div className="hero-stat-label">Avg. Auto-Dispatch</div>
-            </div>
+          {/* Main Headline */}
+          <h1 className="hero-display-title">
+            More of what <br />
+            you love. <br />
+            <span className="hero-faded-title">For less.</span>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="hero-lead-text">
+            Get genuine digital subscriptions, software licenses and gift cards at better prices. Instant delivery. Simple and secure.
+          </p>
+
+          {/* CTAs */}
+          <div className="hero-cta-group">
+            <button
+              className="btn-hero-primary"
+              onClick={() => {
+                if (onExploreClick) onExploreClick();
+                else scrollToSection('popular-products');
+              }}
+            >
+              <span>Explore Products</span>
+              <ArrowRight size={16} />
+            </button>
+
+            <button
+              className="btn-hero-secondary"
+              onClick={() => {
+                if (onHowItWorksClick) onHowItWorksClick();
+                else scrollToSection('how-it-works');
+              }}
+            >
+              <span>How It Works</span>
+            </button>
           </div>
 
-          <div className="hero-stat-item">
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '8px',
-              background: 'rgba(245, 158, 11, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--amber-primary)'
-            }}>
-              <Star size={20} />
+          {/* Trust Row / Value Props */}
+          <div className="hero-trust-row">
+            <div className="trust-item">
+              <div className="trust-icon-box">
+                <Zap size={18} />
+              </div>
+              <span className="trust-label">Instant<br />Delivery</span>
             </div>
-            <div className="hero-stat-info">
-              <div className="hero-stat-value">4.98 / 5.0</div>
-              <div className="hero-stat-label">Verified Trust Score</div>
-            </div>
-          </div>
 
-          <div className="hero-stat-item">
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '8px',
-              background: 'rgba(6, 182, 212, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--cyan-primary)'
-            }}>
-              <Award size={20} />
+            <div className="trust-item">
+              <div className="trust-icon-box">
+                <ShieldCheck size={18} />
+              </div>
+              <span className="trust-label">Genuine<br />Products</span>
             </div>
-            <div className="hero-stat-info">
-              <div className="hero-stat-value">500+ Games</div>
-              <div className="hero-stat-label">Supported Catalogs</div>
+
+            <div className="trust-item">
+              <div className="trust-icon-box">
+                <CreditCard size={18} />
+              </div>
+              <span className="trust-label">Secure<br />Payments</span>
+            </div>
+
+            <div className="trust-item">
+              <div className="trust-icon-box">
+                <Headphones size={18} />
+              </div>
+              <span className="trust-label">Fast<br />Support</span>
             </div>
           </div>
         </div>
 
-        {/* Clean Category Selector Tabs with Vector Icons */}
-        <div className="category-bar">
-          {CATEGORIES.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            const IconComponent = CATEGORY_ICONS[cat.iconName] || Layers;
-
-            return (
-              <button
-                key={cat.id}
-                className={`category-tab ${isActive ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat.id)}
-              >
-                <IconComponent size={16} />
-                <span>{cat.name}</span>
-              </button>
-            );
-          })}
+        {/* Right Column: Hero Visual Showcase */}
+        <div className="hero-right-column">
+          <div className="hero-image-card">
+            <img
+              src={heroShowcaseImg}
+              alt="Nexa Digitals premium subscriptions on laptop, phone and headphones"
+              className="hero-main-photo"
+              loading="eager"
+            />
+          </div>
         </div>
       </div>
     </section>

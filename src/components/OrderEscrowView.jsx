@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { X, ShieldCheck, CheckCircle2, Copy, Check, Send, AlertTriangle, MessageSquare, Lock, Key } from 'lucide-react';
+import { X, CheckCircle2, Copy, Check, Send, Key, MessageSquare } from 'lucide-react';
 import { CURRENCIES } from '../data/mockData';
+import { ProductLogo } from './Icons';
 
-export default function OrderEscrowView({ order, onClose, onReleaseEscrow, onDisputeOrder }) {
-  if (!order) return null;
-
+export default function OrderEscrowView({ order, onClose }) {
   const [copiedKey, setCopiedKey] = useState(null);
-  const [messages, setMessages] = useState(order.sellerChat || []);
+  const [messages, setMessages] = useState(() => order?.sellerChat || []);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  if (!order) return null;
+
   const product = order.product;
   const creds = product.instantCredentials || {};
-  const currency = CURRENCIES[order.currency] || CURRENCIES.USD;
+  const currency = CURRENCIES[order.currency] || CURRENCIES.INR;
 
   const handleCopy = (key, text) => {
     navigator.clipboard.writeText(text);
@@ -26,44 +27,48 @@ export default function OrderEscrowView({ order, onClose, onReleaseEscrow, onDis
     if (!inputText.trim() || isSending) return;
 
     const userMsg = { sender: 'buyer', text: inputText.trim() };
-    const newChat = [...messages, userMsg];
-    setMessages(newChat);
+    setMessages((prev) => [...prev, userMsg]);
     setInputText('');
     setIsSending(true);
 
-    // Simulated Seller response
     setTimeout(() => {
-      let sellerReply = "All delivery parameters are confirmed on our terminal. Please proceed with account verification.";
+      let reply = "Your credentials have been dispatched and validated. Please check the instructions above.";
       const lower = userMsg.text.toLowerCase();
       if (lower.includes('email') || lower.includes('mail')) {
-        sellerReply = "To complete email transfer: Access the game portal settings, initiate Email Change, and use the recovery webmail inbox credentials provided in your VaultShield panel above.";
-      } else if (lower.includes('password') || lower.includes('login')) {
-        sellerReply = "Ensure there are no leading or trailing whitespace characters when pasting your password. Credentials are case-sensitive.";
-      } else if (lower.includes('code') || lower.includes('2fa') || lower.includes('pin')) {
-        sellerReply = "If 2FA authentication is requested, please refer to the Security PIN in your credentials box or check the associated recovery inbox.";
+        reply = "A copy of your activation code and license info has also been sent to your delivery email.";
+      } else if (lower.includes('how') || lower.includes('help')) {
+        reply = "Simply follow the step-by-step instructions in the credentials box. If you need any assistance, we are right here!";
       }
 
-      setMessages((prev) => [...prev, { sender: 'seller', text: sellerReply }]);
+      setMessages((prev) => [...prev, { sender: 'seller', text: reply }]);
       setIsSending(false);
-    }, 1200);
+    }, 1000);
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
-        {/* Header */}
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              background: order.escrowStatus === 'released' ? 'var(--emerald-primary)' : 'var(--amber-primary)',
-              boxShadow: '0 0 10px rgba(16, 185, 129, 0.6)'
+              background: '#10B981',
+              boxShadow: '0 0 8px rgba(16, 185, 129, 0.6)'
             }} />
-            <span className="modal-title">Escrow Settlement #{order.orderId}</span>
-            <span className={`badge ${order.escrowStatus === 'released' ? 'badge-instant' : 'badge-gold'}`}>
-              {order.escrowStatus === 'released' ? 'Settled & Released' : 'Vault Escrow Active'}
+            <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#111111' }}>
+              Order #{order.orderId}
+            </h3>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              background: '#DCFCE7',
+              color: '#16A34A'
+            }}>
+              Instant Dispatched
             </span>
           </div>
           <button className="modal-close-btn" onClick={onClose}>
@@ -72,152 +77,190 @@ export default function OrderEscrowView({ order, onClose, onReleaseEscrow, onDis
         </div>
 
         <div className="modal-body">
-          {/* Escrow Progress Timeline */}
-          <div className="escrow-timeline">
-            <div className={`timeline-step ${order.escrowStatus !== 'disputed' ? 'active' : ''}`}>
-              <div className="step-circle">1</div>
-              <div className="step-label">Escrow Locked</div>
-            </div>
-            <div style={{ flex: 1, height: '2px', background: 'var(--emerald-primary)', margin: '0 8px' }} />
-            <div className="timeline-step active">
-              <div className="step-circle">2</div>
-              <div className="step-label">Assets Dispatched</div>
-            </div>
-            <div style={{ flex: 1, height: '2px', background: order.escrowStatus === 'released' ? 'var(--emerald-primary)' : 'rgba(255,255,255,0.1)', margin: '0 8px' }} />
-            <div className={`timeline-step ${order.escrowStatus === 'released' ? 'active' : ''}`}>
-              <div className="step-circle">3</div>
-              <div className="step-label">Buyer Confirmed</div>
-            </div>
-          </div>
-
-          {/* Delivery Credentials Box */}
-          <div className="credentials-box">
-            <div className="credentials-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Key size={18} style={{ color: 'var(--emerald-glow)' }} />
-                <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>
-                  VaultShield™ Dispatched Credentials & Access Tokens
-                </span>
-              </div>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ fontSize: '11px' }}
-              >
-                {showPassword ? 'Mask Passwords' : 'Show Passwords'}
-              </button>
-            </div>
-
-            {Object.entries(creds).map(([key, val]) => {
-              const isSecret = key.toLowerCase().includes('pass') || key.toLowerCase().includes('pin');
-              const displayVal = isSecret && !showPassword ? '••••••••••••••••' : String(val);
-
-              return (
-                <div key={key} className="credential-field">
-                  <span style={{ color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                    {key.replace(/([A-Z])/g, ' $1')}:
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{displayVal}</span>
-                    <button
-                      className="copy-btn"
-                      onClick={() => handleCopy(key, String(val))}
-                      title="Copy to clipboard"
-                    >
-                      {copiedKey === key ? <Check size={14} style={{ color: 'var(--emerald-glow)' }} /> : <Copy size={14} />}
-                      <span>{copiedKey === key ? 'Copied' : 'Copy'}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Interactive Seller Chat */}
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px', fontWeight: 700 }}>
-              <MessageSquare size={16} style={{ color: 'var(--violet-bright)' }} />
-              <span>Direct Settlement Channel with {product.seller.name}</span>
-            </div>
-
-            <div className="chat-window">
-              <div className="chat-messages">
-                {messages.map((m, idx) => (
-                  <div key={idx} className={`chat-bubble ${m.sender}`}>
-                    {m.sender === 'system' && <span style={{ fontWeight: 700, color: 'var(--violet-light)' }}>[VaultShield Escrow] </span>}
-                    {m.text}
-                  </div>
-                ))}
-              </div>
-
-              <form onSubmit={handleSendMessage} className="chat-input-row">
-                <input
-                  type="text"
-                  className="chat-input"
-                  placeholder="Transmit message to seller..."
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                />
-                <button type="submit" className="btn btn-primary btn-sm" disabled={isSending}>
-                  <Send size={14} />
-                  <span>Send</span>
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Escrow Action Bar */}
+          {/* Product Mini Header */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-md)',
-            flexWrap: 'wrap',
-            gap: '12px'
+            gap: '14px',
+            padding: '14px',
+            background: '#FAF8F3',
+            borderRadius: '12px',
+            border: '1px solid #EAE5DB',
+            marginBottom: '20px'
           }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {order.escrowStatus === 'released' ? 'Escrow Settlement Completed' : 'Verification Period Active'}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {order.escrowStatus === 'released'
-                  ? 'Funds have been successfully settled to the merchant. Transaction closed.'
-                  : 'Authorize release only after verifying login credentials and in-game attributes.'}
-              </div>
+            <ProductLogo type={product.iconType} size={42} />
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#111111' }}>{product.title}</h4>
+              <p style={{ fontSize: '12.5px', color: '#6B7280' }}>
+                {product.plan || '1 Month Plan'} • Paid: {currency.symbol}{order.totalAmount.toFixed(0)}
+              </p>
             </div>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {order.escrowStatus !== 'released' && (
-                <>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => onDisputeOrder(order.orderId)}
-                    style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.3)' }}
-                  >
-                    <AlertTriangle size={14} />
-                    <span>Open Dispute</span>
-                  </button>
-
-                  <button
-                    className="btn btn-emerald btn-sm"
-                    onClick={() => onReleaseEscrow(order.orderId)}
-                  >
-                    <CheckCircle2 size={14} />
-                    <span>Confirm & Release Escrow</span>
-                  </button>
-                </>
-              )}
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={14} /> Active
+              </span>
             </div>
           </div>
-        </div>
 
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>
-            Close Window
-          </button>
+          {/* Credentials Display Box */}
+          <div style={{
+            background: '#FFFFFF',
+            border: '1px solid #E5E7EB',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '14px',
+              paddingBottom: '10px',
+              borderBottom: '1px solid #F3F4F6'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Key size={18} style={{ color: '#059669' }} />
+                <span style={{ fontSize: '14px', fontWeight: 800, color: '#111111' }}>
+                  Dispatched Credentials & Tokens
+                </span>
+              </div>
+              <button
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ fontSize: '11.5px', fontWeight: 700, color: '#4B5563' }}
+              >
+                {showPassword ? 'Hide Passwords' : 'Reveal Passwords'}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {Object.entries(creds).map(([k, val]) => {
+                const isSecret = k.toLowerCase().includes('pass') || k.toLowerCase().includes('pin');
+                const displayVal = isSecret && !showPassword ? '••••••••••••••••' : String(val);
+
+                return (
+                  <div key={k} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    background: '#F9FAFB',
+                    borderRadius: '8px',
+                    fontSize: '13px'
+                  }}>
+                    <span style={{ color: '#6B7280', textTransform: 'capitalize', fontWeight: 600 }}>
+                      {k.replace(/([A-Z])/g, ' $1')}:
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ color: '#111111', fontWeight: 700, wordBreak: 'break-all' }}>
+                        {displayVal}
+                      </span>
+                      <button
+                        onClick={() => handleCopy(k, String(val))}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          background: '#E5E7EB',
+                          fontSize: '11px',
+                          fontWeight: 700
+                        }}
+                      >
+                        {copiedKey === k ? <Check size={12} style={{ color: '#059669' }} /> : <Copy size={12} />}
+                        <span>{copiedKey === k ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interactive Chat / Support */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px', fontWeight: 700 }}>
+              <MessageSquare size={16} />
+              <span>Nexa Support & Seller Assistance</span>
+            </div>
+
+            <div style={{
+              background: '#F9FAFB',
+              border: '1px solid #E5E7EB',
+              borderRadius: '10px',
+              padding: '12px',
+              maxHeight: '160px',
+              overflowY: 'auto',
+              marginBottom: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              {messages.map((m, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    alignSelf: m.sender === 'buyer' ? 'flex-end' : 'flex-start',
+                    background: m.sender === 'buyer' ? '#111111' : '#FFFFFF',
+                    color: m.sender === 'buyer' ? '#FFFFFF' : '#111111',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12.5px',
+                    maxWidth: '85%',
+                    border: m.sender === 'buyer' ? 'none' : '1px solid #E5E7EB'
+                  }}
+                >
+                  {m.text}
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="Ask support a question about activation..."
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                style={{
+                  flex: 1,
+                  height: '38px',
+                  padding: '0 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #D1D5DB',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              />
+              <button
+                type="submit"
+                className="btn-signin"
+                style={{ height: '38px', padding: '0 16px', fontSize: '13px' }}
+                disabled={isSending}
+              >
+                <Send size={13} />
+                <span>Send</span>
+              </button>
+            </form>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: '14px',
+            borderTop: '1px solid #E5E7EB'
+          }}>
+            <span style={{ fontSize: '12px', color: '#6B7280' }}>
+              🛡️ Covered by 30-Day Nexa Guarantee
+            </span>
+            <button
+              className="btn-signin"
+              style={{ height: '38px', padding: '0 20px', fontSize: '13px' }}
+              onClick={onClose}
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
     </div>

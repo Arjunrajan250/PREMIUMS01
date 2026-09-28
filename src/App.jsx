@@ -1,114 +1,86 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import GameFilterBar from './components/GameFilterBar';
-import FilterSidebar from './components/FilterSidebar';
+import CategoryQuickBar from './components/CategoryQuickBar';
 import ProductCard from './components/ProductCard';
 import ProductDetailModal from './components/ProductDetailModal';
 import CheckoutModal from './components/CheckoutModal';
 import OrderEscrowView from './components/OrderEscrowView';
-import SellerWizardModal from './components/SellerWizardModal';
-import EscrowExplainerModal from './components/EscrowExplainerModal';
-import WalletModal from './components/WalletModal';
+import CartDrawer from './components/CartDrawer';
+import SignInModal from './components/SignInModal';
+import FAQModal from './components/FAQModal';
 import OrdersListModal from './components/OrdersListModal';
-import VaultShieldSection from './components/VaultShieldSection';
+import EntertainmentBanner from './components/EntertainmentBanner';
+import HowItWorksSection from './components/HowItWorksSection';
+import TestimonialsSection from './components/TestimonialsSection';
 import Footer from './components/Footer';
 
-import { SearchX, SlidersHorizontal } from 'lucide-react';
-import { INITIAL_LISTINGS, CURRENCIES } from './data/mockData';
+import { ArrowRight, SearchX } from 'lucide-react';
+import { INITIAL_LISTINGS } from './data/mockData';
 import './styles/marketplace.css';
 
 export default function App() {
-  // Persistence for custom listings
-  const [listings, setListings] = useState(() => {
-    const saved = localStorage.getItem('nexusloot_listings');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
-    }
+  // Products catalog
+  const [listings] = useState(() => {
     return INITIAL_LISTINGS;
   });
 
-  // User orders
+  // Cart Items — Preloaded with 2 items to match the screenshot badge '2'
+  const [cartItems, setCartItems] = useState(() => {
+    const saved = localStorage.getItem('nexa_cart');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    // Default 2 items from the screenshot (Spotify Premium & YouTube Premium)
+    return [
+      { ...INITIAL_LISTINGS[0], quantity: 1 },
+      { ...INITIAL_LISTINGS[1], quantity: 1 }
+    ];
+  });
+
+  // Orders history
   const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('nexusloot_orders');
+    const saved = localStorage.getItem('nexa_orders');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
     return [];
   });
 
-  // Wallet balance
-  const [walletBalance, setWalletBalance] = useState(() => {
-    const saved = localStorage.getItem('nexusloot_wallet');
-    return saved ? parseFloat(saved) : 120.00;
-  });
-
   // Currency & Navigation filters
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [selectedCurrency, setSelectedCurrency] = useState('INR');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedGame, setSelectedGame] = useState('all');
-
-  // Sidebar filters
-  const [regionFilter, setRegionFilter] = useState('all');
-  const [instantOnly, setInstantOnly] = useState(false);
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [sortBy, setSortBy] = useState('featured');
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   // Modals state
   const [inspectProduct, setInspectProduct] = useState(null);
   const [checkoutProduct, setCheckoutProduct] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
-  const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
-  const [isEscrowInfoOpen, setIsEscrowInfoOpen] = useState(false);
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isOrdersListOpen, setIsOrdersListOpen] = useState(false);
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (regionFilter !== 'all') count++;
-    if (instantOnly) count++;
-    if (verifiedOnly) count++;
-    if (minPrice) count++;
-    if (maxPrice) count++;
-    if (sortBy !== 'featured') count++;
-    return count;
-  }, [regionFilter, instantOnly, verifiedOnly, minPrice, maxPrice, sortBy]);
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem('nexusloot_listings', JSON.stringify(listings));
-  }, [listings]);
+    localStorage.setItem('nexa_cart', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   useEffect(() => {
-    localStorage.setItem('nexusloot_orders', JSON.stringify(orders));
+    localStorage.setItem('nexa_orders', JSON.stringify(orders));
   }, [orders]);
-
-  useEffect(() => {
-    localStorage.setItem('nexusloot_wallet', walletBalance.toString());
-  }, [walletBalance]);
 
   // Filtering Logic
   const filteredListings = useMemo(() => {
-    const currency = CURRENCIES[selectedCurrency];
-
     return listings.filter((item) => {
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesTitle = item.title.toLowerCase().includes(q);
-        const matchesGame = item.game.toLowerCase().includes(q);
-        const matchesSeller = item.seller.name.toLowerCase().includes(q);
+        const matchesCategory = item.category.toLowerCase().includes(q);
         const matchesTags = item.tags && item.tags.some(t => t.toLowerCase().includes(q));
-        if (!matchesTitle && !matchesGame && !matchesSeller && !matchesTags) return false;
-      }
-
-      // Game filter
-      if (selectedGame !== 'all' && item.gameId !== selectedGame) {
-        return false;
+        if (!matchesTitle && !matchesCategory && !matchesTags) return false;
       }
 
       // Category filter
@@ -116,335 +88,279 @@ export default function App() {
         return false;
       }
 
-      // Region filter
-      if (regionFilter !== 'all' && item.region !== regionFilter && item.region !== 'Global') {
-        return false;
-      }
-
-      // Instant delivery only
-      if (instantOnly && item.deliveryType !== 'instant') {
-        return false;
-      }
-
-      // Verified sellers only
-      if (verifiedOnly && !item.seller.verified) {
-        return false;
-      }
-
-      // Price filter in current currency
-      const itemPriceConverted = item.price * currency.rate;
-      if (minPrice && itemPriceConverted < parseFloat(minPrice)) {
-        return false;
-      }
-      if (maxPrice && itemPriceConverted > parseFloat(maxPrice)) {
-        return false;
-      }
-
       return true;
-    }).sort((a, b) => {
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      if (sortBy === 'rating') return b.seller.rating - a.seller.rating;
-      if (sortBy === 'orders') return b.seller.reviewsCount - a.seller.reviewsCount;
-      // Default: featured first
-      return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
     });
-  }, [listings, searchQuery, selectedGame, selectedCategory, regionFilter, instantOnly, verifiedOnly, minPrice, maxPrice, sortBy, selectedCurrency]);
+  }, [listings, searchQuery, selectedCategory]);
 
-  // Handlers
-  const handleResetFilters = () => {
-    setRegionFilter('all');
-    setInstantOnly(false);
-    setVerifiedOnly(false);
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('featured');
-    setSelectedCategory('all');
-    setSelectedGame('all');
-    setSearchQuery('');
+  // Products to display:
+  // If not searching, category is 'all', and not "showAllProducts", show top 6 items matching screenshot!
+  const displayedProducts = useMemo(() => {
+    if (!searchQuery.trim() && selectedCategory === 'all' && !showAllProducts) {
+      return filteredListings.slice(0, 6);
+    }
+    return filteredListings;
+  }, [filteredListings, searchQuery, selectedCategory, showAllProducts]);
+
+  // Cart Handlers
+  const handleAddToCart = (product) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
   };
 
-  const handleCompleteOrder = (newOrder, usdDeduction) => {
-    if (newOrder.paymentMethod === 'wallet') {
-      setWalletBalance((prev) => Math.max(0, prev - usdDeduction));
+  const handleUpdateQuantity = (productId, newQty) => {
+    if (newQty <= 0) {
+      handleRemoveItem(productId);
+      return;
     }
+    setCartItems((prev) =>
+      prev.map((item) => (item.id === productId ? { ...item, quantity: newQty } : item))
+    );
+  };
+
+  const handleRemoveItem = (productId) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== productId));
+  };
+
+  const totalCartCount = useMemo(() => {
+    return cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  }, [cartItems]);
+
+  // Order Handlers
+  const handleCompleteOrder = (newOrder) => {
     setOrders((prev) => [newOrder, ...prev]);
     setCheckoutProduct(null);
-    setActiveOrder(newOrder); // Automatically open Escrow Tracker!
+    setActiveOrder(newOrder); // Automatically open credentials reveal!
   };
 
-  const handleReleaseEscrow = (orderId) => {
-    setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.orderId === orderId) {
-          const updatedChat = [
-            ...ord.sellerChat,
-            { sender: 'system', text: '✅ Escrow successfully released to seller. Order completed!' }
-          ];
-          return { ...ord, escrowStatus: 'released', sellerChat: updatedChat };
-        }
-        return ord;
-      })
-    );
-    if (activeOrder && activeOrder.orderId === orderId) {
-      setActiveOrder((prev) => ({
-        ...prev,
-        escrowStatus: 'released',
-        sellerChat: [
-          ...prev.sellerChat,
-          { sender: 'system', text: '✅ Escrow successfully released to seller. Order completed!' }
-        ]
-      }));
-    }
-  };
-
-  const handleDisputeOrder = (orderId) => {
-    setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.orderId === orderId) {
-          const updatedChat = [
-            ...ord.sellerChat,
-            { sender: 'system', text: '⚠️ VaultShield dispute ticket opened. A platform moderator has joined to inspect delivery proof.' }
-          ];
-          return { ...ord, escrowStatus: 'disputed', sellerChat: updatedChat };
-        }
-        return ord;
-      })
-    );
-    if (activeOrder && activeOrder.orderId === orderId) {
-      setActiveOrder((prev) => ({
-        ...prev,
-        escrowStatus: 'disputed',
-        sellerChat: [
-          ...prev.sellerChat,
-          { sender: 'system', text: '⚠️ VaultShield dispute ticket opened. A platform moderator has joined to inspect delivery proof.' }
-        ]
-      }));
-    }
-  };
-
-  const handleAddListing = (newListing) => {
-    setListings((prev) => [newListing, ...prev]);
-  };
-
-  const handleTopUpWallet = (usdAmount) => {
-    setWalletBalance((prev) => prev + usdAmount);
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setShowAllProducts(false);
   };
 
   return (
-    <div className="nexusloot-app">
+    <div className="nexa-app-root">
       {/* Top Header Navigation */}
       <Header
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         selectedCurrency={selectedCurrency}
         setSelectedCurrency={setSelectedCurrency}
-        walletBalance={walletBalance}
-        onOpenSellerModal={() => setIsSellerModalOpen(true)}
-        onOpenEscrowInfo={() => setIsEscrowInfoOpen(true)}
-        onOpenWalletModal={() => setIsWalletModalOpen(true)}
-        activeOrdersCount={orders.filter(o => o.escrowStatus === 'held').length}
-        onOpenOrdersModal={() => setIsOrdersListOpen(true)}
+        cartCount={totalCartCount}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenSignIn={() => setIsSignInOpen(true)}
+        onOpenHowItWorks={() => {
+          const el = document.getElementById('how-it-works');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onOpenFaq={() => setIsFaqOpen(true)}
+        onSelectCategory={(catId) => setSelectedCategory(catId)}
       />
 
-      {/* Main Hero & Stats */}
+      {/* Main Hero & Visual Showcase */}
       <Hero
+        onExploreClick={() => {
+          const el = document.getElementById('popular-products');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onHowItWorksClick={() => {
+          const el = document.getElementById('how-it-works');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
+
+      {/* Horizontal Category Pills Quick Bar */}
+      <CategoryQuickBar
         selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
+        onSelectCategory={(catId) => {
+          setSelectedCategory(catId);
+          const el = document.getElementById('popular-products');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
       />
 
-      {/* Popular Games Horizontal Selector */}
-      <GameFilterBar
-        selectedGame={selectedGame}
-        setSelectedGame={setSelectedGame}
-      />
-
-      {/* Marketplace Catalog & Filters Layout */}
-      <main className="container" id="marketplace" style={{ marginTop: '24px' }}>
-        {/* Mobile Quick Filter Bar */}
-        <div className="mobile-filter-bar mobile-only">
-          <button
-            className="btn btn-outline"
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
-            onClick={() => setIsMobileFilterOpen(true)}
-          >
-            <SlidersHorizontal size={16} style={{ color: 'var(--violet-bright)' }} />
-            <span style={{ fontWeight: 700, fontSize: '13px' }}>Filter & Sort</span>
-            {activeFiltersCount > 0 && (
-              <span className="badge badge-escrow" style={{ padding: '2px 6px', fontSize: '10px' }}>
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-          {(activeFiltersCount > 0 || searchQuery || selectedGame !== 'all' || selectedCategory !== 'all') && (
-            <button className="btn btn-ghost btn-sm" onClick={handleResetFilters} style={{ fontSize: '12px' }}>
-              Reset All
-            </button>
-          )}
-        </div>
-
-        {/* Backdrop for mobile drawer */}
-        {isMobileFilterOpen && (
-          <div className="mobile-filter-backdrop mobile-only" onClick={() => setIsMobileFilterOpen(false)} />
-        )}
-
-        <div className="marketplace-layout">
-          {/* Left Sidebar Filters */}
-          <FilterSidebar
-            regionFilter={regionFilter}
-            setRegionFilter={setRegionFilter}
-            instantOnly={instantOnly}
-            setInstantOnly={setInstantOnly}
-            verifiedOnly={verifiedOnly}
-            setVerifiedOnly={setVerifiedOnly}
-            minPrice={minPrice}
-            setMinPrice={setMinPrice}
-            maxPrice={maxPrice}
-            setMaxPrice={setMaxPrice}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            selectedCurrency={selectedCurrency}
-            onResetFilters={handleResetFilters}
-            isOpenMobile={isMobileFilterOpen}
-            onCloseMobile={() => setIsMobileFilterOpen(false)}
-          />
-
-          {/* Right Product Grid */}
-          <section>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '18px'
-            }}>
-              <div>
-                <h2 style={{ fontSize: '20px', fontWeight: 800 }}>
-                  Active Offers & Listings
-                </h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Showing {filteredListings.length} verified listings ready for instant trade
-                </p>
-              </div>
-
-              {(searchQuery || selectedGame !== 'all' || selectedCategory !== 'all') && (
-                <button className="btn btn-ghost btn-sm" onClick={handleResetFilters}>
-                  Clear all filters
-                </button>
-              )}
+      {/* Popular Products Catalog */}
+      <section className="popular-products-section" id="popular-products">
+        <div className="container">
+          <div className="section-header-row">
+            <div>
+              <h2 className="section-main-title">
+                {selectedCategory !== 'all'
+                  ? `${selectedCategory.replace('-', ' ').toUpperCase()} Products`
+                  : 'Popular Products'}
+              </h2>
+              <p className="section-sub-title">
+                {searchQuery
+                  ? `Showing results for "${searchQuery}"`
+                  : 'Most bought and trusted by our customers.'}
+              </p>
             </div>
 
-            {filteredListings.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                background: 'var(--bg-card)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-subtle)'
-              }}>
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px',
-                  color: 'var(--text-muted)'
-                }}>
-                  <SearchX size={28} />
-                </div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
-                  No matching listings found
-                </h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                  Try adjusting your price filter, clearing search keywords, or selecting another game.
-                </p>
-                <button className="btn btn-primary btn-sm" onClick={handleResetFilters}>
-                  Reset All Filters
-                </button>
-              </div>
-            ) : (
-              <div className="product-grid">
-                {filteredListings.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    selectedCurrency={selectedCurrency}
-                    onSelectProduct={(p) => setInspectProduct(p)}
-                    onQuickBuy={(p) => setCheckoutProduct(p)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      </main>
+            <button
+              className="view-all-link-btn"
+              onClick={() => {
+                if (selectedCategory !== 'all' || searchQuery) {
+                  handleResetFilters();
+                } else {
+                  setShowAllProducts(!showAllProducts);
+                }
+              }}
+            >
+              <span>
+                {selectedCategory !== 'all' || searchQuery
+                  ? 'Clear Filter'
+                  : showAllProducts
+                  ? 'Show Popular'
+                  : 'View All'}
+              </span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
 
-      {/* VaultShield Escrow Section */}
-      <VaultShieldSection
-        onOpenSellerModal={() => setIsSellerModalOpen(true)}
-        onOpenEscrowInfo={() => setIsEscrowInfoOpen(true)}
+          {displayedProducts.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              background: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #EAE5DB'
+            }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: '#F3F4F6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: '#6B7280'
+              }}>
+                <SearchX size={28} />
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '6px' }}>
+                No matching digital products found
+              </h3>
+              <p style={{ fontSize: '13.5px', color: '#6B7280', marginBottom: '20px' }}>
+                Try adjusting your search terms or selecting another category.
+              </p>
+              <button className="btn-hero-primary" onClick={handleResetFilters}>
+                Browse All Products
+              </button>
+            </div>
+          ) : (
+            <div className="products-grid">
+              {displayedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  selectedCurrency={selectedCurrency}
+                  onSelectProduct={(p) => setInspectProduct(p)}
+                  onAddToCart={handleAddToCart}
+                  isInCart={cartItems.some((item) => item.id === product.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Entertainment Promo Banner */}
+      <EntertainmentBanner
+        onShopNow={() => {
+          setSelectedCategory('streaming');
+          const el = document.getElementById('popular-products');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
+
+      {/* How It Works Section */}
+      <HowItWorksSection />
+
+      {/* What Our Customers Say (Testimonials) */}
+      <TestimonialsSection
+        onAllReviewsClick={() => {
+          const el = document.getElementById('testimonials');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
       />
 
       {/* Footer */}
       <Footer
-        onOpenEscrowInfo={() => setIsEscrowInfoOpen(true)}
-        onOpenSellerModal={() => setIsSellerModalOpen(true)}
+        onCategoryClick={(catId) => {
+          setSelectedCategory(catId);
+          const el = document.getElementById('popular-products');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onOrdersClick={() => setIsOrdersListOpen(true)}
+        onFaqClick={() => setIsFaqOpen(true)}
       />
 
-      {/* Modals */}
+      {/* Modals & Drawers */}
+      {/* 1. Cart Drawer */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={(item) => {
+          setIsCartOpen(false);
+          setCheckoutProduct(item);
+        }}
+        selectedCurrency={selectedCurrency}
+      />
+
+      {/* 2. Product Detail Modal */}
       {inspectProduct && (
         <ProductDetailModal
           product={inspectProduct}
           selectedCurrency={selectedCurrency}
           onClose={() => setInspectProduct(null)}
           onBuyNow={(p) => setCheckoutProduct(p)}
+          onAddToCart={handleAddToCart}
         />
       )}
 
+      {/* 3. Checkout Modal */}
       {checkoutProduct && (
         <CheckoutModal
           product={checkoutProduct}
           selectedCurrency={selectedCurrency}
-          walletBalance={walletBalance}
           onClose={() => setCheckoutProduct(null)}
           onCompleteOrder={handleCompleteOrder}
         />
       )}
 
+      {/* 4. Order Escrow / Credentials Modal */}
       {activeOrder && (
         <OrderEscrowView
           order={activeOrder}
           onClose={() => setActiveOrder(null)}
-          onReleaseEscrow={handleReleaseEscrow}
-          onDisputeOrder={handleDisputeOrder}
         />
       )}
 
-      {isSellerModalOpen && (
-        <SellerWizardModal
-          onClose={() => setIsSellerModalOpen(false)}
-          onAddListing={handleAddListing}
-          selectedCurrency={selectedCurrency}
-        />
-      )}
+      {/* 5. Sign In Modal */}
+      <SignInModal
+        isOpen={isSignInOpen}
+        onClose={() => setIsSignInOpen(false)}
+        onLoginSuccess={() => {}}
+      />
 
-      {isEscrowInfoOpen && (
-        <EscrowExplainerModal
-          onClose={() => setIsEscrowInfoOpen(false)}
-        />
-      )}
+      {/* 6. FAQ Modal */}
+      <FAQModal
+        isOpen={isFaqOpen}
+        onClose={() => setIsFaqOpen(false)}
+      />
 
-      {isWalletModalOpen && (
-        <WalletModal
-          walletBalance={walletBalance}
-          onTopUp={handleTopUpWallet}
-          selectedCurrency={selectedCurrency}
-          onClose={() => setIsWalletModalOpen(false)}
-        />
-      )}
-
+      {/* 7. Orders List Modal */}
       {isOrdersListOpen && (
         <OrdersListModal
           orders={orders}
